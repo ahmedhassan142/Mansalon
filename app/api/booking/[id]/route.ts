@@ -35,14 +35,17 @@ export async function GET(
 // Update booking
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // ✅ Changed to Promise
 ) {
   try {
     await connectDB();
     
     const body = await request.json();
     
-    const booking = await Booking.findById(params.id);
+    // ✅ FIX: Await params first
+    const { id } = await params;
+    
+    const booking = await Booking.findById(id); // ✅ Use resolved id
     
     if (!booking) {
       return NextResponse.json(
@@ -62,7 +65,7 @@ export async function PUT(
     });
 
     const updatedBooking = await Booking.findByIdAndUpdate(
-      params.id,
+      id, // ✅ Use resolved id
       updates,
       { new: true, runValidators: true }
     );
@@ -92,12 +95,15 @@ export async function PUT(
 // Delete booking
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // ✅ Changed to Promise
 ) {
   try {
     await connectDB();
     
-    const booking = await Booking.findById(params.id);
+    // ✅ FIX: Await params first
+    const { id } = await params;
+    
+    const booking = await Booking.findById(id); // ✅ Use resolved id
     
     if (!booking) {
       return NextResponse.json(
@@ -106,7 +112,7 @@ export async function DELETE(
       );
     }
 
-    await Booking.findByIdAndDelete(params.id);
+    await Booking.findByIdAndDelete(id); // ✅ Use resolved id
 
     return NextResponse.json({
       message: 'Booking deleted successfully'
