@@ -5,12 +5,16 @@ import Booking from '@/lib/models/Booking';
 // Get single booking by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
     
-    const booking = await Booking.findById(params.id);
+    // ✅ FIX: Await the params first to get the actual values
+    const { id } = await params;
+    
+    // ✅ Now use the resolved id
+    const booking = await Booking.findById(id);
     
     if (!booking) {
       return NextResponse.json(
@@ -28,7 +32,6 @@ export async function GET(
     );
   }
 }
-
 // Update booking
 export async function PUT(
   request: NextRequest,
