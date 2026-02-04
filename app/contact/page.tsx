@@ -1,4 +1,5 @@
-'use client';
+// app/contact/page.tsx
+'use client'
 
 import { useState } from 'react';
 import { 
@@ -10,8 +11,23 @@ import {
   CheckCircle,
   MessageCircle,
   User,
-  Scissors
+  Scissors,
+  Navigation
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the map component to avoid SSR issues
+const BarberOpenStreetMap = dynamic(() => import('../components/openstreetmap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-96 bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center rounded-lg">
+      <div className="text-center">
+        <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-white font-medium">Loading map...</p>
+      </div>
+    </div>
+  )
+});
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,6 +39,19 @@ export default function ContactPage() {
     subject: '',
     message: ''
   });
+
+  // Salon coordinates (update with real coordinates)
+  const salonPosition: [number, number] = [40.7128, -74.0060]; // NYC coordinates
+  const salonInfo = {
+    name: "Gent's Grooming Salon",
+    address: "123 Barber Street, Downtown District, City, State 12345",
+    phone: "(555) 123-4567",
+    hours: {
+      weekdays: "Monday - Friday: 9:00 AM - 7:00 PM",
+      saturday: "Saturday: 9:00 AM - 6:00 PM",
+      sunday: "Sunday: 10:00 AM - 5:00 PM"
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -56,6 +85,16 @@ export default function ContactPage() {
       alert('Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(salonInfo.address);
+      alert('Address copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy address:', error);
+      alert('Failed to copy address to clipboard');
     }
   };
 
@@ -114,11 +153,13 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Visit Our Salon</h3>
-                    <p className="text-gray-600">
-                      123 Barber Street<br />
-                      Downtown District<br />
-                      City, State 12345
-                    </p>
+                    <p className="text-gray-600 mb-2">{salonInfo.address}</p>
+                    <button
+                      onClick={copyAddress}
+                      className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-md transition-colors"
+                    >
+                      Copy Address
+                    </button>
                   </div>
                 </div>
 
@@ -129,7 +170,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Call Us</h3>
                     <p className="text-gray-600">
-                      <a href="tel:+15551234567" className="hover:text-amber-600 block">(555) 123-4567</a>
+                      <a href="tel:+15551234567" className="hover:text-amber-600 block">{salonInfo.phone}</a>
                       <a href="tel:+15551234568" className="hover:text-amber-600 block">(555) 123-4568</a>
                     </p>
                   </div>
@@ -159,9 +200,9 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Business Hours</h3>
                     <p className="text-gray-600">
-                      Monday - Friday: 9:00 AM - 7:00 PM<br />
-                      Saturday: 9:00 AM - 6:00 PM<br />
-                      Sunday: 10:00 AM - 5:00 PM
+                      {salonInfo.hours.weekdays}<br />
+                      {salonInfo.hours.saturday}<br />
+                      {salonInfo.hours.sunday}
                     </p>
                   </div>
                 </div>
@@ -289,14 +330,44 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Map Section */}
-        <div className="mt-12 bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="h-96 bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-            <div className="text-white text-center">
-              <Scissors className="w-16 h-16 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">Visit Our Location</h3>
-              <p className="text-amber-100">123 Barber Street, Downtown District</p>
-              <p className="text-amber-100">City, State 12345</p>
+        {/* Map Section - Replaced with OpenStreetMap */}
+        <div className="mt-12">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 flex items-center">
+                    <Navigation className="w-6 h-6 text-amber-600 mr-2" />
+                    Visit Our Location
+                  </h3>
+                  <p className="text-gray-600 mt-1">{salonInfo.address}</p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(salonInfo.address)}`, '_blank')}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center space-x-2"
+                  >
+                    <span>G</span>
+                    <span>Google Maps</span>
+                  </button>
+                  <button
+                    onClick={() => window.open(`http://maps.apple.com/?daddr=${salonPosition[0]},${salonPosition[1]}`, '_blank')}
+                    className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2"
+                  >
+                    <span>🍎</span>
+                    <span>Apple Maps</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="h-96">
+              <BarberOpenStreetMap 
+                position={salonPosition}
+                zoom={16}
+                salonName={salonInfo.name}
+                address={salonInfo.address}
+                phone={salonInfo.phone}
+              />
             </div>
           </div>
         </div>
